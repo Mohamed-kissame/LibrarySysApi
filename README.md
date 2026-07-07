@@ -20,6 +20,7 @@ The API supports:
 * Preserving borrowing history
 * Preventing invalid borrowing operations
 * Applying business rules through the BLL and SQL Server stored procedures
+* Dashboard-ready statistics endpoints for total books, members, and borrowings
 
 ---
 
