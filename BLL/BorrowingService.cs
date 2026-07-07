@@ -135,5 +135,14 @@ namespace BLL
                     => throw new Exception("An unexpected error occurred while returning the borrowing record.")
             };
         }
+
+        public async Task<int> GetTotalBorrowingsAsync()
+        {
+
+            int Results = await _borrowingDAL.GetTotalBorrowingsAsync();
+
+            return Results;
+
+        }
     }
 }
