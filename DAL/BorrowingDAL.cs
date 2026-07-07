@@ -235,6 +235,45 @@ namespace DAL
             }
         }
 
+
+        public async Task<int> GetTotalBorrowingsAsync()
+        {
+
+            int totalBorowwings = 0;
+
+            try
+            {
+
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await using SqlCommand command = new SqlCommand("Sp_GetTotalBorrowings", connection);
+
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                SqlParameter TotalBorrowings = new SqlParameter("@TotalBorrowings", SqlDbType.Int)
+                {
+                    Direction = ParameterDirection.Output
+                };
+
+                command.Parameters.Add(TotalBorrowings);
+
+                await connection.OpenAsync();
+
+                await command.ExecuteScalarAsync();
+
+                totalBorowwings = (int)TotalBorrowings.Value;
+
+
+                return totalBorowwings;
+
+
+            }catch(Exception ex)
+            {
+                throw new Exception("Error while get the total of Borrowings", ex);
+            }
+
+
+        }
+
         private static Borrowing MapReaderToBorrowing(SqlDataReader reader)
         {
             return new Borrowing

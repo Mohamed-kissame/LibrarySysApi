@@ -240,5 +240,29 @@ namespace LibrarySys.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred. Please try again later.");
             }
         }
+
+        [HttpGet("/TotalBorrowing")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+
+        public async Task<IActionResult> GetTotalBorrowingAsync()
+        {
+
+
+            try
+            {
+
+                var response = await _borrowingService.GetTotalBorrowingsAsync();
+                return Ok(response);
+
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred. Please try again later.");
+            }
+
+        }
+
     }
 }

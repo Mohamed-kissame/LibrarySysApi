@@ -139,5 +139,14 @@ namespace BLL
             };
 
         }
+
+        public async Task<int> GetTotalMembersAsync()
+        {
+
+            int Results = await _memberDAL.GetTotalMembersAsync();
+
+            return Results;
+
+        }
     }
 }

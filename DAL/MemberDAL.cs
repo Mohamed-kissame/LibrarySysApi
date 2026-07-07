@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Models;
 using Microsoft.Data.SqlClient;
+using System.Net.Http.Headers;
 
 namespace DAL
 {
@@ -296,6 +297,45 @@ namespace DAL
                 throw new Exception($"Error checking if member with ID {memberId} exists in the database.", ex);
             }
             return exists;
+        }
+
+
+        public async Task<int> GetTotalMembersAsync()
+        {
+
+            int TotalMembers = 0;
+
+            try
+            {
+
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await using SqlCommand command = new SqlCommand("dbo.Sp_GetTotalMembers", connection);
+
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                SqlParameter TotalMembersOutput = new SqlParameter("@TotalMembers", System.Data.SqlDbType.Int)
+                {
+                    Direction = System.Data.ParameterDirection.Output
+                };
+
+                command.Parameters.Add(TotalMembersOutput);
+
+                await connection.OpenAsync();
+
+                await command.ExecuteScalarAsync();
+
+                TotalMembers = (int)TotalMembersOutput.Value;
+
+
+                return TotalMembers;
+
+
+
+            }catch(Exception ex)
+            {
+                throw new Exception("Error while get the Total of Members" , ex);
+            }
+
         }
 
         private static Member MapToMember(SqlDataReader reader)
