@@ -1,1096 +1,617 @@
-\# Library Borrowing RESTful API
+# Library Borrowing RESTful API
 
-
-
-A real-world Library Borrowing RESTful API built with \*\*ASP.NET Core Web API\*\*, \*\*C#\*\*, \*\*SQL Server\*\*, \*\*ADO.NET\*\*, \*\*Stored Procedures\*\*, and a clean \*\*3-Tier Architecture\*\*.
-
-
+A real-world **Library Borrowing RESTful API** built with **ASP.NET Core Web API**, **C#**, **SQL Server**, **ADO.NET**, **Stored Procedures**, and a clean **3-Tier Architecture**.
 
 This project manages books, members, borrowing operations, return operations, borrowing history, soft delete rules, and database-level business transactions.
 
+---
 
+## Project Overview
 
-\---
+This project was built to practice backend development beyond simple CRUD operations.
 
+The API supports:
 
+* Managing books
+* Managing members
+* Borrowing books
+* Returning borrowed books
+* Tracking available copies
+* Preserving borrowing history
+* Preventing invalid borrowing operations
+* Applying business rules through the BLL and SQL Server stored procedures
 
-\## Project Goal
+---
 
+## Tech Stack
 
+* ASP.NET Core Web API
+* C#
+* SQL Server
+* ADO.NET
+* Stored Procedures
+* Swagger / OpenAPI
+* DTOs
+* Async / Await
+* SQL Transactions
+* 3-Tier Architecture
 
-The goal of this project is to practice building a backend API that is more than simple CRUD.
+---
 
-
-
-The system supports:
-
-
-
-\- Managing books
-
-\- Managing members
-
-\- Borrowing books
-
-\- Returning books
-
-\- Tracking available copies
-
-\- Preventing invalid borrowing operations
-
-\- Preserving borrowing history
-
-\- Applying business rules through the BLL and SQL Server stored procedures
-
-
-
-\---
-
-
-
-\## Tech Stack
-
-
-
-\- ASP.NET Core Web API
-
-\- C#
-
-\- SQL Server
-
-\- ADO.NET
-
-\- Stored Procedures
-
-\- Swagger / OpenAPI
-
-\- 3-Tier Architecture
-
-\- DTOs
-
-\- Async / Await
-
-\- SQL Transactions
-
-
-
-\---
-
-
-
-\## Architecture
-
-
+## Architecture
 
 The project follows a clean layered architecture:
 
-
-
 ```text
-
 API Layer
-
 ↓
-
 BLL Layer
-
 ↓
-
 DAL Layer
-
 ↓
-
 SQL Server
-
 ```
 
-
-
-\### API Layer
-
-
+### API Layer
 
 Responsible for:
 
+* HTTP endpoints
+* Request DTOs
+* Response DTOs
+* HTTP status codes
+* Swagger documentation/testing
+* Mapping internal models to response DTOs
 
-
-\- HTTP endpoints
-
-\- Request DTOs
-
-\- Response DTOs
-
-\- Status codes
-
-\- Swagger testing
-
-\- Mapping models to response DTOs
-
-
-
-\### BLL Layer
-
-
+### BLL Layer
 
 Responsible for:
 
+* Business rules
+* Input validation
+* ResultCode mapping
+* Exception-based business flow
+* Preventing invalid operations
 
-
-\- Business rules
-
-\- Validation
-
-\- ResultCode mapping
-
-\- Exception handling logic
-
-\- Preventing invalid operations
-
-
-
-\### DAL Layer
-
-
+### DAL Layer
 
 Responsible for:
 
+* SQL Server connection
+* Calling stored procedures
+* Reading output parameters
+* Mapping SQL results to C# models
 
-
-\- SQL Server connection
-
-\- Calling stored procedures
-
-\- Reading output parameters
-
-\- Mapping `SqlDataReader` data to models
-
-
-
-\### SQL Server
-
-
+### SQL Server
 
 Responsible for:
 
+* Tables
+* Constraints
+* Relationships
+* Stored procedures
+* Transactions
+* Data integrity
 
+---
 
-\- Tables
+## Main Features
 
-\- Constraints
+### Books Management
 
-\- Relationships
+The API allows managing books with full CRUD operations.
 
-\- Stored procedures
+Book rules:
 
-\- Transactions
+* ISBN must be unique.
+* Total copies must be greater than zero.
+* Available copies cannot be negative.
+* Available copies cannot be greater than total copies.
+* Books are soft deleted using `IsActive = 0`.
+* A book cannot be deleted if it has active borrowings.
 
-\- Data integrity
+---
 
+### Members Management
 
+The API allows managing library members with full CRUD operations.
 
-\---
+Member rules:
 
+* Email must be unique.
+* Members are soft deleted using `IsActive = 0`.
+* Inactive members cannot borrow books.
+* A member cannot be deleted if they have active borrowings.
 
+---
 
-\## Main Entities
+### Borrowing System
 
+The borrowing system is the core part of this project.
 
+Borrowing rules:
 
-\### Books
+* A book must exist.
+* A book must be active.
+* A member must exist.
+* A member must be active.
+* The book must have available copies.
+* A member cannot borrow more than 3 active books.
+* A member cannot borrow the same book twice before returning it.
+* Borrowing decreases `AvailableCopies` by 1.
+* Returning increases `AvailableCopies` by 1.
+* Borrowing and returning are protected using SQL transactions.
 
+---
 
+## Database Entities
 
-A book represents an item that can be borrowed.
-
-
-
-Main fields:
-
-
+### Books
 
 ```text
-
 BookID
-
 Title
-
 Author
-
 ISBN
-
 TotalCopies
-
 AvailableCopies
-
 IsActive
-
 CreatedAt
-
 UpdatedAt
-
 ```
 
+---
 
-
-Important rules:
-
-
-
-\- ISBN must be unique.
-
-\- TotalCopies must be greater than 0.
-
-\- AvailableCopies cannot be negative.
-
-\- AvailableCopies cannot be greater than TotalCopies.
-
-\- Inactive books cannot be borrowed.
-
-\- Books are soft deleted using `IsActive = 0`.
-
-\- A book cannot be deleted if it has active borrowings.
-
-
-
-\---
-
-
-
-\### Members
-
-
-
-A member represents a library user who can borrow books.
-
-
-
-Main fields:
-
-
+### Members
 
 ```text
-
 MemberID
-
 FullName
-
 Email
-
 Phone
-
 IsActive
-
 CreatedAt
-
 UpdatedAt
-
 ```
 
+---
 
-
-Important rules:
-
-
-
-\- Email must be unique.
-
-\- Members are soft deleted using `IsActive = 0`.
-
-\- Inactive members cannot borrow books.
-
-\- A member cannot be deleted if they have active borrowings.
-
-
-
-\---
-
-
-
-\### Borrowings
-
-
-
-A borrowing represents a book borrowed by a member.
-
-
-
-Main fields:
-
-
+### Borrowings
 
 ```text
-
 BorrowingID
-
 BookID
-
 MemberID
-
 BorrowDate
-
 DueDate
-
 ReturnDate
-
 Status
-
 CreatedAt
-
 UpdatedAt
-
 ```
 
-
-
-Supported statuses:
-
-
+Supported borrowing statuses:
 
 ```text
-
 Borrowed
-
 Returned
-
 ```
 
+---
 
+## API Endpoints
 
-Important rules:
+### Books
 
+| Method | Endpoint              | Description          |
+| ------ | --------------------- | -------------------- |
+| GET    | `/api/books`          | Get all active books |
+| GET    | `/api/books/{bookId}` | Get book by ID       |
+| POST   | `/api/books`          | Add a new book       |
+| PUT    | `/api/books/{bookId}` | Update a book        |
+| DELETE | `/api/books/{bookId}` | Soft delete a book   |
 
+---
 
-\- Borrowing creates a new record in `Borrowings`.
+### Members
 
-\- Borrowing decreases `Books.AvailableCopies` by 1.
+| Method | Endpoint                  | Description            |
+| ------ | ------------------------- | ---------------------- |
+| GET    | `/api/members`            | Get all active members |
+| GET    | `/api/members/{memberId}` | Get member by ID       |
+| POST   | `/api/members`            | Add a new member       |
+| PUT    | `/api/members/{memberId}` | Update a member        |
+| DELETE | `/api/members/{memberId}` | Soft delete a member   |
 
-\- Returning updates the borrowing status to `Returned`.
+---
 
-\- Returning increases `Books.AvailableCopies` by 1.
+### Borrowings
 
-\- Borrow and return operations use SQL transactions.
+| Method | Endpoint                               | Description                        |
+| ------ | -------------------------------------- | ---------------------------------- |
+| GET    | `/api/borrowings`                      | Get all borrowings                 |
+| GET    | `/api/borrowings/{borrowingId}`        | Get borrowing by ID                |
+| GET    | `/api/borrowings/book/{bookId}`        | Get borrowing history by book ID   |
+| GET    | `/api/borrowings/member/{memberId}`    | Get borrowing history by member ID |
+| POST   | `/api/borrowings`                      | Borrow a book                      |
+| PUT    | `/api/borrowings/{borrowingId}/return` | Return a borrowed book             |
 
-\- A member cannot borrow more than 3 active books.
+---
 
-\- A member cannot borrow the same book twice before returning it.
+## Request Examples
 
-\- A book cannot be borrowed if no copies are available.
-
-
-
-\---
-
-
-
-\## API Endpoints
-
-
-
-\### Books
-
-
-
-| Method | Endpoint | Description |
-
-|---|---|---|
-
-| GET | `/api/books` | Get all active books |
-
-| GET | `/api/books/{bookId}` | Get book by ID |
-
-| POST | `/api/books` | Add new book |
-
-| PUT | `/api/books/{bookId}` | Update book |
-
-| DELETE | `/api/books/{bookId}` | Soft delete book |
-
-
-
-\---
-
-
-
-\### Members
-
-
-
-| Method | Endpoint | Description |
-
-|---|---|---|
-
-| GET | `/api/members` | Get all active members |
-
-| GET | `/api/members/{memberId}` | Get member by ID |
-
-| POST | `/api/members` | Add new member |
-
-| PUT | `/api/members/{memberId}` | Update member |
-
-| DELETE | `/api/members/{memberId}` | Soft delete member |
-
-
-
-\---
-
-
-
-\### Borrowings
-
-
-
-| Method | Endpoint | Description |
-
-|---|---|---|
-
-| GET | `/api/borrowings` | Get all borrowings |
-
-| GET | `/api/borrowings/{borrowingId}` | Get borrowing by ID |
-
-| GET | `/api/borrowings/book/{bookId}` | Get borrowing history by book ID |
-
-| GET | `/api/borrowings/member/{memberId}` | Get borrowing history by member ID |
-
-| POST | `/api/borrowings` | Borrow a book |
-
-| PUT | `/api/borrowings/{borrowingId}/return` | Return a borrowed book |
-
-
-
-\---
-
-
-
-\## Request Examples
-
-
-
-\### Add Book
-
-
+### Add Book
 
 ```json
-
 {
-
-&#x20; "title": "Clean Code",
-
-&#x20; "author": "Robert C. Martin",
-
-&#x20; "isbn": "9780132350884",
-
-&#x20; "totalCopies": 5
-
+  "title": "Clean Code",
+  "author": "Robert C. Martin",
+  "isbn": "9780132350884",
+  "totalCopies": 5
 }
-
 ```
 
+---
 
-
-\---
-
-
-
-\### Add Member
-
-
+### Add Member
 
 ```json
-
 {
-
-&#x20; "fullName": "Mohamed Amrani",
-
-&#x20; "email": "mohamed.amrani@example.com",
-
-&#x20; "phone": "+212600111222"
-
+  "fullName": "Mohamed Amrani",
+  "email": "mohamed.amrani@example.com",
+  "phone": "+212600111222"
 }
-
 ```
 
+---
 
-
-\---
-
-
-
-\### Borrow Book
-
-
+### Borrow Book
 
 ```json
-
 {
-
-&#x20; "bookID": 1,
-
-&#x20; "memberID": 1
-
+  "bookID": 1,
+  "memberID": 1
 }
-
 ```
 
+---
 
-
-\---
-
-
-
-\### Return Book
-
-
+### Return Book
 
 No request body is required.
 
-
-
 ```http
-
 PUT /api/borrowings/1/return
-
 ```
 
+---
 
+## Business Rules
 
-\---
+### Borrow Book Flow
 
-
-
-\## Important Business Rules
-
-
-
-\### Borrow Book
-
-
-
-When borrowing a book, the API checks:
-
-
+When borrowing a book, the system checks:
 
 ```text
-
-1\. Book exists
-
-2\. Book is active
-
-3\. Member exists
-
-4\. Member is active
-
-5\. Book has available copies
-
-6\. Member has fewer than 3 active borrowings
-
-7\. Member has not already borrowed the same book
-
-8\. Insert borrowing record
-
-9\. Decrease AvailableCopies by 1
-
+1. Book exists
+2. Book is active
+3. Member exists
+4. Member is active
+5. Book has available copies
+6. Member has fewer than 3 active borrowings
+7. Member has not already borrowed the same book
+8. Insert borrowing record
+9. Decrease AvailableCopies by 1
 ```
-
-
 
 This operation is handled inside a SQL transaction.
 
+---
 
+### Return Book Flow
 
-\---
-
-
-
-\### Return Book
-
-
-
-When returning a book, the API checks:
-
-
+When returning a book, the system checks:
 
 ```text
-
-1\. Borrowing exists
-
-2\. Borrowing is still active
-
-3\. Update borrowing status to Returned
-
-4\. Set ReturnDate
-
-5\. Increase AvailableCopies by 1
-
+1. Borrowing exists
+2. Borrowing is still active
+3. Update borrowing status to Returned
+4. Set ReturnDate
+5. Increase AvailableCopies by 1
 ```
-
-
 
 This operation is handled inside a SQL transaction.
 
+---
 
-
-\---
-
-
-
-\### Delete Book
-
-
+### Delete Book Rule
 
 A book can be soft deleted only if it has no active borrowings.
 
-
-
 ```text
-
 Active borrowing = Status = 'Borrowed' AND ReturnDate IS NULL
-
 ```
-
-
 
 If active borrowings exist, the API returns:
 
-
-
 ```text
-
 409 Conflict
-
 ```
 
+---
 
-
-\---
-
-
-
-\### Delete Member
-
-
+### Delete Member Rule
 
 A member can be soft deleted only if they have no active borrowings.
 
-
-
 If active borrowings exist, the API returns:
 
-
-
 ```text
-
 409 Conflict
-
 ```
 
+---
 
+## HTTP Status Codes
 
-\---
+| Status Code               | Meaning                                     |
+| ------------------------- | ------------------------------------------- |
+| 200 OK                    | Successful GET, update, or return operation |
+| 201 Created               | Resource created successfully               |
+| 204 No Content            | Resource deleted successfully               |
+| 400 Bad Request           | Invalid request data or invalid ID          |
+| 404 Not Found             | Resource does not exist                     |
+| 409 Conflict              | Business rule conflict                      |
+| 500 Internal Server Error | Unexpected server error                     |
 
+---
 
-
-\## Status Codes
-
-
-
-| Status Code | Meaning |
-
-|---|---|
-
-| 200 OK | Successful GET, update, return operation |
-
-| 201 Created | Resource created successfully |
-
-| 204 No Content | Resource deleted successfully |
-
-| 400 Bad Request | Invalid request data or invalid ID |
-
-| 404 Not Found | Resource does not exist |
-
-| 409 Conflict | Business rule conflict |
-
-| 500 Internal Server Error | Unexpected server error |
-
-
-
-\---
-
-
-
-\## SQL Transactions
-
-
+## SQL Transactions
 
 The most important operations in this project are protected using SQL transactions:
 
-
-
 ```text
-
 Borrow Book
-
 Return Book
-
 ```
 
-
-
-This prevents data inconsistency.
-
-
+This prevents inconsistent data.
 
 Example:
 
-
-
 ```text
-
 Borrowing a book must insert a borrowing record and decrease available copies.
 
 If one step fails, the whole operation is rolled back.
-
 ```
 
+---
 
-
-\---
-
-
-
-\## Stored Procedures
-
-
+## Stored Procedures
 
 The project uses stored procedures for all database operations.
 
-
-
-Main stored procedure groups:
-
-
+### Books Procedures
 
 ```text
-
-Books:
-
-\- sp\_Books\_GetAll
-
-\- sp\_Books\_GetById
-
-\- sp\_Books\_Add
-
-\- sp\_Books\_Update
-
-\- sp\_Books\_Delete
-
-\- sp\_Books\_ISBNExists
-
-\- sp\_Books\_ExistsById
-
-
-
-Members:
-
-\- sp\_Members\_GetAll
-
-\- sp\_Members\_GetById
-
-\- sp\_Members\_Add
-
-\- sp\_Members\_Update
-
-\- sp\_Members\_Delete
-
-\- sp\_Members\_EmailExists
-
-\- sp\_Members\_ExistsById
-
-
-
-Borrowings:
-
-\- sp\_Borrowings\_GetAll
-
-\- sp\_Borrowings\_GetById
-
-\- sp\_Borrowings\_GetByBookId
-
-\- sp\_Borrowings\_GetByMemberId
-
-\- sp\_Borrowings\_Add
-
-\- sp\_Borrowings\_Return
-
+sp_Books_GetAll
+sp_Books_GetById
+sp_Books_Add
+sp_Books_Update
+sp_Books_Delete
+sp_Books_ISBNExists
+sp_Books_ExistsById
 ```
 
+### Members Procedures
 
+```text
+sp_Members_GetAll
+sp_Members_GetById
+sp_Members_Add
+sp_Members_Update
+sp_Members_Delete
+sp_Members_EmailExists
+sp_Members_ExistsById
+```
 
-\---
+### Borrowings Procedures
 
+```text
+sp_Borrowings_GetAll
+sp_Borrowings_GetById
+sp_Borrowings_GetByBookId
+sp_Borrowings_GetByMemberId
+sp_Borrowings_Add
+sp_Borrowings_Return
+```
 
+---
 
-\## ResultCode Handling
-
-
+## ResultCode Handling
 
 Some stored procedures return result codes to the C# application.
 
-
-
 Example for borrowing:
 
-
-
 ```text
-
-&#x20;1  = success
-
-\-1  = book not found
-
-\-2  = book inactive
-
-\-3  = member not found
-
-\-4  = member inactive
-
-\-5  = no available copies
-
-\-6  = borrowing limit reached
-
-\-7  = same book already borrowed
-
+ 1  = Success
+-1  = Book not found
+-2  = Book inactive
+-3  = Member not found
+-4  = Member inactive
+-5  = No available copies
+-6  = Borrowing limit reached
+-7  = Same book already borrowed
 ```
-
-
 
 The BLL maps these result codes to exceptions, and the API controller maps those exceptions to proper HTTP responses.
 
+---
 
-
-\---
-
-
-
-\## Setup Instructions
-
-
-
-\### 1. Clone the repository
-
-
-
-```bash
-
-git clone https://github.com/YOUR\_USERNAME/YOUR\_REPOSITORY\_NAME.git
-
-```
-
-
-
-\### 2. Open the solution in Visual Studio
-
-
-
-Open the `.sln` file.
-
-
-
-\### 3. Configure the connection string
-
-
-
-Use \*\*User Secrets\*\* for the real SQL Server connection string.
-
-
-
-Example:
-
-
-
-```json
-
-{
-
-&#x20; "ConnectionStrings": {
-
-&#x20;   "DefaultConnection": "Server=.;Database=LibrarySysDB;Trusted\_Connection=True;TrustServerCertificate=True"
-
-&#x20; }
-
-}
-
-```
-
-
-
-Do not commit real database passwords to GitHub.
-
-
-
-\### 4. Create the database
-
-
-
-Run the SQL scripts for:
-
-
-
-```text
-
-Tables
-
-Constraints
-
-Stored procedures
-
-Test data
-
-```
-
-
-
-\### 5. Run the API
-
-
-
-Start the Web API project and open Swagger.
-
-
-
-\---
-
-
-
-\## Testing
-
-
+## Swagger Testing
 
 The API was manually tested using Swagger.
 
-
-
 Tested scenarios include:
 
-
-
 ```text
-
 Books CRUD
-
 Members CRUD
-
 Borrowing history
-
 Borrow book success
-
-Borrow book invalid book/member
-
+Borrow invalid book/member
 Borrow inactive book/member
-
 Borrow with no available copies
-
 Borrow same book twice
-
 Borrowing limit reached
-
 Return book success
-
 Return already returned borrowing
-
 Delete book with active borrowings
-
 Delete member with active borrowings
-
 ```
 
+---
 
+## Project Structure
 
-\---
+```text
+LibrarySysApi
+│
+├── LibrarySys
+│   ├── Controllers
+│   ├── DTOs
+│   ├── Program.cs
+│   └── appsettings.json
+│
+├── BLL
+│   ├── BookService.cs
+│   ├── MemberService.cs
+│   └── BorrowingService.cs
+│
+├── DAL
+│   ├── BookDAL.cs
+│   ├── MemberDAL.cs
+│   └── BorrowingDAL.cs
+│
+└── Models
+    ├── Book.cs
+    ├── Member.cs
+    └── Borrowing.cs
+```
 
+---
 
+## Setup Instructions
 
-\## Learning Outcomes
+### 1. Clone the repository
 
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY_NAME.git
+```
 
+---
 
-This project helped practice:
+### 2. Open the solution
 
+Open the `.sln` file in Visual Studio.
 
+---
 
-\- RESTful API design
+### 3. Configure the connection string
 
-\- Layered architecture
+Use **User Secrets** for the real SQL Server connection string.
 
-\- DTO usage
+Example:
 
-\- ADO.NET
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=.;Database=LibrarySysDB;Trusted_Connection=True;TrustServerCertificate=True"
+  }
+}
+```
 
-\- Stored procedures
+Do not commit real database passwords to GitHub.
 
-\- SQL transactions
+---
 
-\- Business rule validation
+### 4. Create the database
 
-\- Soft delete
+Run the SQL scripts for:
 
-\- HTTP status codes
+```text
+Tables
+Constraints
+Stored procedures
+Test data
+```
 
-\- Swagger testing
+---
 
-\- Clean backend flow from Controller to SQL Server
+### 5. Run the API
 
+Start the Web API project and open Swagger.
 
+---
 
-\---
+## Learning Outcomes
 
+This project helped me practice:
 
+* RESTful API design
+* Clean layered architecture
+* DTO usage
+* ADO.NET
+* Stored procedures
+* SQL transactions
+* SQL constraints
+* Business rule validation
+* Soft delete
+* ResultCode handling
+* HTTP status codes
+* Swagger testing
+* Controller → BLL → DAL → SQL Server flow
 
-\## Project Status
+---
 
+## Future Improvements
 
+Possible future improvements:
+
+```text
+JWT Authentication
+Roles and Policies
+Pagination
+Logging
+Unit Testing
+Late return fines
+Email notifications
+Admin dashboard
+```
+
+---
+
+## Project Status
 
 Core backend logic completed.
 
-
-
-Ready for future improvements:
-
-
+The project includes:
 
 ```text
-
-JWT Authentication
-
-Roles and Policies
-
-Pagination
-
-Logging
-
-Unit testing
-
-Fines for late returns
-
-Email notifications
-
-Admin dashboard
-
+Books management
+Members management
+Borrowing system
+Return system
+Borrowing history
+Soft delete protection
+Transaction-based business operations
 ```
 
+---
 
+## Author
 
-\---
+**Mohamed Kissame**
 
-
-
-\## Author
-
-
-
-\*\*Mohamed Kissame\*\*
-
-
-
-Software Engineering / Backend Development learner focused on building real-world C# and .NET backend systems.
-
-
-
+Backend Development learner focused on building real-world C# and .NET backend systems.
