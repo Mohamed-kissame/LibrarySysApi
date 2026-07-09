@@ -1,4 +1,5 @@
 ﻿using Microsoft.Data.SqlClient;
+using Microsoft.VisualBasic;
 using Models;
 using System.Data;
 
@@ -311,6 +312,50 @@ namespace DAL
 
 
             return isExist;
+        }
+
+        public async Task<int> GetTotalBooksAsync()
+        {
+
+            int TotalBooks = 0;
+
+            try
+            {
+
+
+                await using SqlConnection connection = new SqlConnection(_connectionString);
+                await using SqlCommand command = new SqlCommand("Sp_GetTotalBooks", connection);
+
+                command.CommandType = CommandType.StoredProcedure;
+
+
+                SqlParameter totalbooksOutPut = new SqlParameter("@TotalBooks", SqlDbType.Int)
+                {
+                    Direction = ParameterDirection.Output
+
+                };
+
+                command.Parameters.Add(totalbooksOutPut);
+
+                await connection.OpenAsync();
+
+                await command.ExecuteScalarAsync();
+
+                TotalBooks = Convert.ToInt32(totalbooksOutPut.Value);
+
+
+                return TotalBooks;
+
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception("An error occurred while get the count of books", ex);
+
+            }
+
+
+
         }
 
         private static Book MapToBook(SqlDataReader reader)

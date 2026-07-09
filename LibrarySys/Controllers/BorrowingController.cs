@@ -241,7 +241,7 @@ namespace LibrarySys.Controllers
             }
         }
 
-        [HttpGet("/TotalBorrowing")]
+        [HttpGet("TotalBorrowing")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
