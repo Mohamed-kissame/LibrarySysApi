@@ -40,7 +40,7 @@ namespace LibrarySys.Controllers
         [ProducesResponseType(typeof(IEnumerable<BookResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
-        public async Task<ActionResult<IEnumerable<BookResponseDto>>> GetAllBooks()
+        public async Task<ActionResult<IEnumerable<BookResponseDto>>> GetAllBooksAsync()
         {
 
             try
@@ -72,7 +72,7 @@ namespace LibrarySys.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
-        public async Task<ActionResult<BookResponseDto>> GetBookById(int bookId)
+        public async Task<ActionResult<BookResponseDto>> GetBookByIdAsync(int bookId)
         {
             try
             {
@@ -107,7 +107,7 @@ namespace LibrarySys.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
-        public async Task<ActionResult<BookResponseDto>> AddNewBook([FromBody] CreateBookDto createBookDto)
+        public async Task<ActionResult<BookResponseDto>> AddNewBookAsync([FromBody] CreateBookDto createBookDto)
         {
 
             try
@@ -122,7 +122,7 @@ namespace LibrarySys.Controllers
 
                 var response = MapToBookResponseDto(book);
 
-                return CreatedAtAction(nameof(GetBookById), new { bookId = book.BookID }, response);
+                return CreatedAtAction(nameof(GetBookByIdAsync), new { bookId = book.BookID }, response);
 
             }
             catch (ArgumentException ex)
@@ -148,7 +148,7 @@ namespace LibrarySys.Controllers
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
-        public async Task<ActionResult<BookResponseDto>> UpdateBook(int bookId, [FromBody] UpdateBookDto updateBookDto)
+        public async Task<ActionResult<BookResponseDto>> UpdateBookAsync(int bookId, [FromBody] UpdateBookDto updateBookDto)
         {
             try
             {
@@ -193,7 +193,7 @@ namespace LibrarySys.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> DeleteBook(int bookId)
+        public async Task<IActionResult> DeleteBookAsync(int bookId)
         {
             try
             {
@@ -222,6 +222,28 @@ namespace LibrarySys.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,"An unexpected error occurred. Please try again later.");
             }
+        }
+
+        [HttpGet("TotalBooks")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+
+        public async Task<IActionResult> GetCountBooksAsync()
+        {
+
+            try
+            {
+
+                var response = await _bookService.GetCountBooksAsync();
+
+                return Ok(response);
+
+
+            }catch(Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred. Please try again later.");
+            }
+
         }
     }
 }

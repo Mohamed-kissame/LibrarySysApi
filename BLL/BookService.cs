@@ -150,5 +150,14 @@ namespace BLL
 
 
         }
+
+        public async Task<int> GetCountBooksAsync()
+        {
+
+            int results = await _bookDAL.GetTotalBooksAsync();
+
+            return results;
+
+        }
     }
 }

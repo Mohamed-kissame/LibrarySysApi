@@ -105,8 +105,11 @@ namespace LibrarySys.Controllers
             try
             {
                 Member member = await _memberService.AddNewMemberAsync(createMemberDTO.FullName, createMemberDTO.Email, createMemberDTO.Phone);
+
                 var response = MapToResponseMemberDTO(member);
-                return CreatedAtAction(nameof(GetMemberByIDAsync), new { memberID = response.MemberID }, response);
+
+                return CreatedAtAction(nameof(GetAllMemebersAsync), new { memberID = response.MemberID }, response);
+
             }
             catch (InvalidOperationException ex)
             {
@@ -182,12 +185,12 @@ namespace LibrarySys.Controllers
                 {
                     return BadRequest("Invalid Member ID. Member ID must be a positive integer.");
                 }
-                 await _memberService.DeleteMemberAsync(memberID);
+                await _memberService.DeleteMemberAsync(memberID);
 
-               
+
                 return NoContent();
             }
-            catch(ArgumentException ex)
+            catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -195,7 +198,7 @@ namespace LibrarySys.Controllers
             {
                 return NotFound(ex.Message);
             }
-            catch(InvalidOperationException ex)
+            catch (InvalidOperationException ex)
             {
                 return Conflict(ex.Message);
             }
@@ -203,6 +206,29 @@ namespace LibrarySys.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred. Please try again later.");
             }
+        }
+
+
+        [HttpGet("TotalMembers")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+
+        public async Task<IActionResult> GetCountMembersAsync()
+        {
+
+            try
+            {
+
+                var response = await _memberService.GetTotalMembersAsync();
+
+                return Ok(response);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred. Please try again later.");
+            }
+
         }
     }
 }
