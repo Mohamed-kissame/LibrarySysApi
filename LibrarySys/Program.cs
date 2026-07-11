@@ -22,6 +22,22 @@ builder.Services.AddScoped<MemberService>();
 builder.Services.AddScoped<BorrowingDAL>(_ => new BorrowingDAL(connectionString));
 builder.Services.AddScoped<BorrowingService>();
 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("LibrarySysApiCorsPolicy", policy =>
+    {
+        policy
+            .WithOrigins(
+                "https://localhost:7154",
+                "http://localhost:5141"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -34,6 +50,8 @@ if (app.Environment.IsDevelopment())
 
 
 app.UseHttpsRedirection();
+
+app.UseCors("LibrarySysApiCorsPolicy");
 
 app.UseAuthorization();
 
