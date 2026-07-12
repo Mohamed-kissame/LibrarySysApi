@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LibrarySys.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {
