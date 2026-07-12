@@ -23,6 +23,10 @@ builder.Services.AddScoped<BorrowingDAL>(_ => new BorrowingDAL(connectionString)
 builder.Services.AddScoped<BorrowingService>();
 
 
+builder.Services.AddScoped<UserDAL>(_ => new UserDAL(connectionString));
+builder.Services.AddScoped<AuthService>();
+
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("LibrarySysApiCorsPolicy", policy =>
