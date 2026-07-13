@@ -87,8 +87,7 @@ namespace DAL
                 command.Parameters.Add("@PasswordHash", SqlDbType.NVarChar, 255).Value = passwordHash;
                 command.Parameters.Add("@Role", SqlDbType.NVarChar, 20).Value = role.Trim();
 
-                command.Parameters.Add("@MemberID", SqlDbType.Int).Value =
-                    memberID.HasValue ? memberID.Value : (object)DBNull.Value;
+                command.Parameters.Add("@MemberID", SqlDbType.Int).Value = memberID.HasValue ? memberID.Value : (object)DBNull.Value;
 
                 SqlParameter newUserIDParam = new SqlParameter("@NewUserID", SqlDbType.Int)
                 {

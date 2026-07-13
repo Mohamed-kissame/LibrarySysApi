@@ -52,39 +52,14 @@ namespace BLL
             return await _userDAL.EmailExistsAsync(email);
         }
 
-        public async Task<User> GetUserByIdAsync(int id)
-        {
-            if (id <= 0)
-                throw new ArgumentException("The user ID must be greater than zero.", nameof(id));
-
-            User? user = await _userDAL.GetUserByIDAsync(id);
-
-            if (user == null)
-                throw new KeyNotFoundException($"No user found with ID {id}.");
-
-            return user;
-        }
-
-        private async Task<User> GetUserByEmailAsync(string email)
-        {
-            if (!IsValidEmail(email))
-                throw new ArgumentException("Invalid email.", nameof(email));
-
-            email = email.Trim().ToLowerInvariant();
-
-            User? user = await _userDAL.GetUserByEmailAsync(email);
-
-            if (user == null)
-                throw new KeyNotFoundException($"No user found with email {email}.");
-
-            return user;
-        }
+    
 
         public async Task<User> RegisterAsync(string fullName, string email, string password , string role, int? memberID)
         {
-            fullName = fullName.Trim();
-            email = email.Trim().ToLowerInvariant();
-            role = role.Trim();
+            fullName = fullName?.Trim() ?? string.Empty;
+            email = email?.Trim().ToLowerInvariant() ?? string.Empty;
+            role = role?.Trim() ?? string.Empty;
+
 
             if (!IsValidFullName(fullName))
                 throw new ArgumentException("Invalid full name. Full name must be non-empty and up to 100 characters.");
@@ -98,11 +73,11 @@ namespace BLL
             if (!IsValidRole(role))
                 throw new ArgumentException("Invalid role. Role must be Admin, Librarian, or Member.");
 
-            if (memberID.HasValue && memberID.Value <= 0)
-                throw new ArgumentException("Member ID must be greater than zero.");
-
             if (role == "Member" && memberID == null)
                 throw new InvalidOperationException("Member role requires a MemberID.");
+
+            if (memberID.HasValue && memberID.Value <= 0)
+                throw new ArgumentException("Member ID must be greater than zero.");
 
             if ((role == "Admin" || role == "Librarian") && memberID != null)
                 throw new InvalidOperationException("Admin and Librarian users cannot have a MemberID.");
@@ -139,25 +114,31 @@ namespace BLL
 
         public async Task<User> LoginAsync(string email, string password)
         {
+            email = email?.Trim().ToLowerInvariant() ?? string.Empty;
 
-            if(!IsValidEmail(email)) throw new ArgumentException("Invalid full name. Full name must be non-empty and up to 100 characters.");
+            if (!IsValidEmail(email)) throw new ArgumentException("Invalid full name. Full name must be non-empty and up to 100 characters.");
 
             if(!IsValidPassword(password)) throw new ArgumentException("Invalid password. Password must be between 8 and 30 characters.");
 
-            email = email.Trim().ToLowerInvariant();
+          
 
-            User? user = await GetUserByEmailAsync(email);
+            User? user = await _userDAL.GetUserByEmailAsync(email);
 
             if(user == null)
             {
-                throw new KeyNotFoundException($"No user found with email {email}.");
+                throw new UnauthorizedAccessException("invalid email/password");
 
             }
 
-            if (!VerifyPassword(password, user.PasswordHash)) throw new UnauthorizedAccessException("The password or email invalid");
+            if (!user.IsActive)
+            {
+                throw new UnauthorizedAccessException("Invalid email/password");
+            }
 
-            else
-                return user;
+            if (!VerifyPassword(password, user.PasswordHash)) throw new UnauthorizedAccessException("Invalid email/password");
+
+           
+           return user;
 
         }
     }
