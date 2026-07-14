@@ -1,6 +1,8 @@
-﻿using BLL;
+﻿using System.Security.Claims;
+using BLL;
 using LibrarySys.DTOs.AuthDTOs;
 using LibrarySys.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 
@@ -89,6 +91,20 @@ namespace LibrarySys.Controllers
                     new { message = "An unexpected error occurred while logging in." }
                 );
             }
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public IActionResult Me()
+        {
+            return Ok(new
+            {
+                UserID = User.FindFirstValue(ClaimTypes.NameIdentifier),
+                Email = User.FindFirstValue(ClaimTypes.Email),
+                Role = User.FindFirstValue(ClaimTypes.Role),
+                MemberID = User.FindFirstValue("memberId"),
+                FullName = User.FindFirstValue("fullName")
+            });
         }
 
         private static AuthResponseDto MapUserToAuthResponseDto(User user , string? token = null , DateTime? expiresAt = null)
