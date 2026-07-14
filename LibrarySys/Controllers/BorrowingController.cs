@@ -1,11 +1,13 @@
 ﻿using System.ComponentModel;
 using BLL;
 using LibrarySys.DTOs.BorrowingDTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibrarySys.Controllers
 {
+    [Authorize]
     [Route("api/borrowings")]
     [ApiController]
     public class BorrowingController : ControllerBase

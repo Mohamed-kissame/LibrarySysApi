@@ -1,11 +1,13 @@
 ﻿using BLL;
 using LibrarySys.DTOs.BookDTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 
 namespace LibrarySys.Controllers
 {
+    [Authorize]
     [Route("api/books")]
     [ApiController]
     public class BooksController : ControllerBase

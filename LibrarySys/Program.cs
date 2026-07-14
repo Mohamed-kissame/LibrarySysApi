@@ -1,5 +1,9 @@
+using System.Text;
 using BLL;
 using DAL;
+using LibrarySys.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +30,7 @@ builder.Services.AddScoped<BorrowingService>();
 builder.Services.AddScoped<UserDAL>(_ => new UserDAL(connectionString));
 builder.Services.AddScoped<AuthService>();
 
+builder.Services.AddScoped<JwtTokenService>();
 
 builder.Services.AddCors(options =>
 {
@@ -41,6 +46,35 @@ builder.Services.AddCors(options =>
     });
 });
 
+string jwtKey = builder.Configuration["JwtSettings:Key"]
+    ?? throw new InvalidOperationException("JWT key is missing.");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+
+        ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
+        ValidAudience = builder.Configuration["JwtSettings:Audience"],
+
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtKey)
+        ),
+
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -56,6 +90,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("LibrarySysApiCorsPolicy");
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

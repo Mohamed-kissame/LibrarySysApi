@@ -1,12 +1,14 @@
 ﻿using System.Net;
 using BLL;
 using LibrarySys.DTOs.MemberDTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 
 namespace LibrarySys.Controllers
 {
+    [Authorize]
     [Route("api/members")]
     [ApiController]
     public class MemberController : ControllerBase

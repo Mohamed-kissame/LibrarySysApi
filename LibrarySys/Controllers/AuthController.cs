@@ -1,5 +1,6 @@
 ﻿using BLL;
 using LibrarySys.DTOs.AuthDTOs;
+using LibrarySys.Services;
 using Microsoft.AspNetCore.Mvc;
 using Models;
 
@@ -10,10 +11,12 @@ namespace LibrarySys.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AuthService _authService;
+        private readonly JwtTokenService _jwtTokenService;
 
-        public AuthController(AuthService authService)
+        public AuthController(AuthService authService , JwtTokenService jwtTokenService)
         {
             _authService = authService;
+            _jwtTokenService = jwtTokenService;
         }
 
         [HttpPost("register")]
@@ -65,7 +68,9 @@ namespace LibrarySys.Controllers
             {
                 User user = await _authService.LoginAsync(loginDto.Email, loginDto.Password);
 
-                AuthResponseDto response = MapUserToAuthResponseDto(user);
+                var tokenResult = _jwtTokenService.GenerateToken(user);
+
+                AuthResponseDto response = MapUserToAuthResponseDto(user , tokenResult.Token , tokenResult.ExpiresAt);
 
                 return Ok(response);
             }
@@ -86,7 +91,7 @@ namespace LibrarySys.Controllers
             }
         }
 
-        private static AuthResponseDto MapUserToAuthResponseDto(User user)
+        private static AuthResponseDto MapUserToAuthResponseDto(User user , string? token = null , DateTime? expiresAt = null)
         {
             return new AuthResponseDto
             {
@@ -96,10 +101,8 @@ namespace LibrarySys.Controllers
                 Role = user.Role,
                 MemberID = user.MemberID,
                 IsActive = user.IsActive,
-
-                
-                Token = string.Empty,
-                ExpiresAt = DateTime.MinValue
+                Token = token ?? string.Empty,
+                ExpiresAt = expiresAt ?? DateTime.MinValue
             };
         }
     }
