@@ -1,8 +1,10 @@
 using System.Text;
 using BLL;
 using DAL;
+using LibrarySys.Authorization;
 using LibrarySys.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
@@ -32,6 +34,12 @@ builder.Services.AddScoped<UserDAL>(_ => new UserDAL(connectionString));
 builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddScoped<JwtTokenService>();
+
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<IAuthorizationHandler, SameMemberHandler>();
+
 
 builder.Services.AddCors(options =>
 {
@@ -102,7 +110,14 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CanAccessMemberData", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.AddRequirements(new SameMemberRequirement());
+    });
+});
 
 var app = builder.Build();
 

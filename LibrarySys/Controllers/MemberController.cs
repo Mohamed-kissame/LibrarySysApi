@@ -67,7 +67,7 @@ namespace LibrarySys.Controllers
         }
 
 
-        [Authorize(Roles = "Admin,Librarian,Member")]
+        [Authorize(Policy = "CanAccessMemberData")]
         [HttpGet("{memberID:int}")]
         [ProducesResponseType(typeof(ResponseMemberDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -84,23 +84,6 @@ namespace LibrarySys.Controllers
             }
             try
             {
-
-                bool isAdminOrLibrarian = User.IsInRole("Admin") || User.IsInRole("Librarian");
-
-                if (!isAdminOrLibrarian)
-                {
-                    string? memberIdClaim = User.FindFirstValue("memberId");
-
-                    if (!int.TryParse(memberIdClaim, out int authenticatedMemberID))
-                    {
-                        return Forbid();
-                    }
-
-                    if (authenticatedMemberID != memberID)
-                    {
-                        return Forbid();
-                    }
-                }
 
                 Member? member = await _memberService.GetMemberByIDAsync(memberID);
                 if (member == null)
