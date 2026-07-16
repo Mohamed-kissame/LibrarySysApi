@@ -39,9 +39,11 @@ namespace LibrarySys.Controllers
         }
 
 
-
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<BorrowingResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<ActionResult<IEnumerable<BorrowingResponseDto>>> GetAllBorrowingAsync()
@@ -64,10 +66,14 @@ namespace LibrarySys.Controllers
 
         }
 
+
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpGet("{borrowingID:int}")]
         [ProducesResponseType(typeof(BorrowingResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<ActionResult<BorrowingResponseDto>> GetBorrowingByIDAsync(int borrowingID)
@@ -92,10 +98,13 @@ namespace LibrarySys.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpGet("book/{bookID:int}")]
         [ProducesResponseType(typeof(IEnumerable<BorrowingResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<ActionResult<IEnumerable<BorrowingResponseDto>>> GetBorrowingByBookIDAsync(int bookID)
@@ -123,10 +132,14 @@ namespace LibrarySys.Controllers
             }
         }
 
+
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpGet("member/{memberID:int}")]
         [ProducesResponseType(typeof(IEnumerable<BorrowingResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<ActionResult<IEnumerable<BorrowingResponseDto>>> GetBorrowingByMemberIDAsync(int memberID)
@@ -154,11 +167,14 @@ namespace LibrarySys.Controllers
         }
 
 
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpPost]
         [ProducesResponseType(typeof(BorrowingResponseDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<ActionResult<BorrowingResponseDto>> AddNewBorrowingAsync([FromBody] CreateBorrowingDto createBorrowingDto)
@@ -206,11 +222,14 @@ namespace LibrarySys.Controllers
         }
 
 
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpPut("{borrowingID:int}/return")]
         [ProducesResponseType(typeof(BorrowingResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<ActionResult<BorrowingResponseDto>> ReturnBorrowingAsync(int borrowingID)
@@ -243,8 +262,12 @@ namespace LibrarySys.Controllers
             }
         }
 
+
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpGet("TotalBorrowing")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<IActionResult> GetTotalBorrowingAsync()
