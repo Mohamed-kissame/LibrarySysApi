@@ -1,13 +1,14 @@
-﻿using System.ComponentModel;
+﻿using System.Security.Claims;
 using BLL;
 using LibrarySys.DTOs.BorrowingDTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Models;
 
 namespace LibrarySys.Controllers
 {
-    [Authorize]
+    
     [Route("api/borrowings")]
     [ApiController]
     public class BorrowingController : ControllerBase
@@ -133,7 +134,7 @@ namespace LibrarySys.Controllers
         }
 
 
-        [Authorize(Roles = "Admin,Librarian")]
+        [Authorize(Roles = "Admin,Librarian,Member")]
         [HttpGet("member/{memberID:int}")]
         [ProducesResponseType(typeof(IEnumerable<BorrowingResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -150,6 +151,25 @@ namespace LibrarySys.Controllers
             }
             try
             {
+
+
+                bool isAdminOrLibrarian = User.IsInRole("Admin") || User.IsInRole("Librarian");
+
+                if (!isAdminOrLibrarian)
+                {
+                    string? memberIdClaim = User.FindFirstValue("memberId");
+
+                    if (!int.TryParse(memberIdClaim, out int authenticatedMemberID))
+                    {
+                        return Forbid();
+                    }
+
+                    if (authenticatedMemberID != memberID)
+                    {
+                        return Forbid();
+                    }
+                }
+
                 List<Borrowing> borrowings = await _borrowingService.GetBorrowingByMemberIDAsync(memberID);
 
                 var response = borrowings.Select(MapBorrowingToResponseDTO).ToList();

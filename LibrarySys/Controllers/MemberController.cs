@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Security.Claims;
 using BLL;
 using LibrarySys.DTOs.MemberDTOs;
 using Microsoft.AspNetCore.Authorization;
@@ -66,7 +67,7 @@ namespace LibrarySys.Controllers
         }
 
 
-        [Authorize(Roles = "Admin,Librarian")]
+        [Authorize(Roles = "Admin,Librarian,Member")]
         [HttpGet("{memberID:int}")]
         [ProducesResponseType(typeof(ResponseMemberDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -83,12 +84,33 @@ namespace LibrarySys.Controllers
             }
             try
             {
+
+                bool isAdminOrLibrarian = User.IsInRole("Admin") || User.IsInRole("Librarian");
+
+                if (!isAdminOrLibrarian)
+                {
+                    string? memberIdClaim = User.FindFirstValue("memberId");
+
+                    if (!int.TryParse(memberIdClaim, out int authenticatedMemberID))
+                    {
+                        return Forbid();
+                    }
+
+                    if (authenticatedMemberID != memberID)
+                    {
+                        return Forbid();
+                    }
+                }
+
                 Member? member = await _memberService.GetMemberByIDAsync(memberID);
                 if (member == null)
                 {
                     return NotFound($"Member with ID {memberID} not found.");
                 }
+
+
                 var response = MapToResponseMemberDTO(member);
+
                 return Ok(response);
             }
             catch (Exception)
