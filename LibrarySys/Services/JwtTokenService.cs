@@ -24,7 +24,7 @@ namespace LibrarySys.Services
 
             string audience = _configuration["JwtSettings:Audience"] ?? throw new InvalidOperationException("JWT audience is missing.");
 
-            int expirationMinutes = int.Parse( _configuration["JwtSettings:ExpirationMinutes"] ?? "60");
+            int expirationMinutes = int.Parse( _configuration["JwtSettings:ExpirationMinutes"] ?? "30");
 
             DateTime expiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes);
 
