@@ -7,7 +7,7 @@ using Models;
 
 namespace LibrarySys.Controllers
 {
-    [Authorize]
+    
     [Route("api/books")]
     [ApiController]
     public class BooksController : ControllerBase
@@ -103,10 +103,14 @@ namespace LibrarySys.Controllers
 
         }
 
+
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpPost]
         [ProducesResponseType(typeof(BookResponseDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<ActionResult<BookResponseDto>> AddNewBookAsync([FromBody] CreateBookDto createBookDto)
@@ -142,12 +146,14 @@ namespace LibrarySys.Controllers
             }
         }
 
-
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpPut("{bookId:int}")]
         [ProducesResponseType(typeof(BookResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<ActionResult<BookResponseDto>> UpdateBookAsync(int bookId, [FromBody] UpdateBookDto updateBookDto)
@@ -188,12 +194,14 @@ namespace LibrarySys.Controllers
 
         }
 
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{bookId:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteBookAsync(int bookId)
         {
@@ -226,8 +234,11 @@ namespace LibrarySys.Controllers
             }
         }
 
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpGet("TotalBooks")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<IActionResult> GetCountBooksAsync()
@@ -241,7 +252,8 @@ namespace LibrarySys.Controllers
                 return Ok(response);
 
 
-            }catch(Exception)
+            }
+            catch(Exception)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, "An unexpected error occurred. Please try again later.");
             }
