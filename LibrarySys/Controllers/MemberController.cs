@@ -8,7 +8,7 @@ using Models;
 
 namespace LibrarySys.Controllers
 {
-    [Authorize]
+   
     [Route("api/members")]
     [ApiController]
     public class MemberController : ControllerBase
@@ -36,8 +36,11 @@ namespace LibrarySys.Controllers
         }
 
 
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<ResponseMemberDTO>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<ActionResult<IEnumerable<ResponseMemberDTO>>> GetAllMemebersAsync()
@@ -63,10 +66,13 @@ namespace LibrarySys.Controllers
         }
 
 
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpGet("{memberID:int}")]
         [ProducesResponseType(typeof(ResponseMemberDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<ActionResult<ResponseMemberDTO>> GetMemberByIDAsync(int memberID)
@@ -91,11 +97,13 @@ namespace LibrarySys.Controllers
             }
         }
 
-
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpPost]
         [ProducesResponseType(typeof(ResponseMemberDTO), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<ActionResult<ResponseMemberDTO>> AddNewMemberAsync([FromBody] CreateMemberDTO createMemberDTO)
@@ -110,7 +118,7 @@ namespace LibrarySys.Controllers
 
                 var response = MapToResponseMemberDTO(member);
 
-                return CreatedAtAction(nameof(GetAllMemebersAsync), new { memberID = response.MemberID }, response);
+                return CreatedAtAction(nameof(GetMemberByIDAsync), new { memberID = response.MemberID }, response);
 
             }
             catch (InvalidOperationException ex)
@@ -128,12 +136,14 @@ namespace LibrarySys.Controllers
 
         }
 
-
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpPut("{memberID:int}")]
         [ProducesResponseType(typeof(ResponseMemberDTO), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<ActionResult<ResponseMemberDTO>> UpdateMemberAsync(int memberID, [FromBody] UpdateMemberDTO updateMemberDTO)
@@ -171,12 +181,14 @@ namespace LibrarySys.Controllers
 
         }
 
-
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{memberID:int}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<IActionResult> DeleteMemberAsync(int memberID)
@@ -210,9 +222,11 @@ namespace LibrarySys.Controllers
             }
         }
 
-
+        [Authorize(Roles = "Admin,Librarian")]
         [HttpGet("TotalMembers")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 
         public async Task<IActionResult> GetCountMembersAsync()
