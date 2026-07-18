@@ -31,6 +31,7 @@ builder.Services.AddScoped<BorrowingService>();
 
 
 builder.Services.AddScoped<UserDAL>(_ => new UserDAL(connectionString));
+builder.Services.AddScoped<RefreshTokenDAL>(_ => new RefreshTokenDAL(connectionString));
 builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddScoped<JwtTokenService>();
