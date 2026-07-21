@@ -72,7 +72,9 @@ namespace LibrarySys.Controllers
 
                 var tokenResult = _jwtTokenService.GenerateToken(user);
 
-                AuthResponseDto response = MapUserToAuthResponseDto(user , tokenResult.Token , tokenResult.ExpiresAt);
+                string refreshToken = await _authService.CreateRefreshTokenAsync(user.UserID);
+
+                AuthResponseDto response = MapUserToAuthResponseDto(user , tokenResult.Token , tokenResult.ExpiresAt , refreshToken);
 
                 return Ok(response);
             }
@@ -93,6 +95,87 @@ namespace LibrarySys.Controllers
             }
         }
 
+
+        [HttpPost("refresh")]
+        [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<AuthResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto refreshTokenDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var refreshResult = await _authService.RotateRefreshTokenAsync(refreshTokenDto.RefreshToken);
+
+                var tokenResult = _jwtTokenService.GenerateToken(refreshResult.User);
+
+                AuthResponseDto response = MapUserToAuthResponseDto(
+                    refreshResult.User,
+                    tokenResult.Token,
+                    tokenResult.ExpiresAt,
+                    refreshResult.RefreshToken
+                );
+
+                return Ok(response);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = "An unexpected error occurred while refreshing the token." }
+                );
+            }
+        }
+
+        [HttpPost("logout")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> Logout([FromBody] LogoutRequestDto logoutDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                await _authService.RevokeRefreshTokenAsync(logoutDto.RefreshToken);
+
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized(new { message = "Invalid refresh token." });
+            }
+            catch (Exception)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { message = "An unexpected error occurred while logging out." }
+                );
+            }
+        }
+
+
         [Authorize]
         [HttpGet("me")]
         public IActionResult Me()
@@ -107,7 +190,7 @@ namespace LibrarySys.Controllers
             });
         }
 
-        private static AuthResponseDto MapUserToAuthResponseDto(User user , string? token = null , DateTime? expiresAt = null)
+        private static AuthResponseDto MapUserToAuthResponseDto(User user , string? token = null , DateTime? expiresAt = null , string? RefreshToken = null)
         {
             return new AuthResponseDto
             {
@@ -117,9 +200,13 @@ namespace LibrarySys.Controllers
                 Role = user.Role,
                 MemberID = user.MemberID,
                 IsActive = user.IsActive,
-                Token = token ?? string.Empty,
-                ExpiresAt = expiresAt ?? DateTime.MinValue
+                AccessToken = token ?? string.Empty,
+                AccessTokenExpiresAt = expiresAt ?? DateTime.MinValue,
+                RefreshToken = RefreshToken ?? string.Empty
+                
             };
         }
+
+
     }
 }
