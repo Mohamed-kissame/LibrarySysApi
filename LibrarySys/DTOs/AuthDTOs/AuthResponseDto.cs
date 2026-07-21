@@ -14,8 +14,10 @@
 
         public bool IsActive { get; set; }
 
-        public string Token { get; set; } = string.Empty;
+        public string AccessToken { get; set; } = string.Empty;
 
-        public DateTime ExpiresAt { get; set; }
+        public DateTime AccessTokenExpiresAt { get; set; }
+
+        public string RefreshToken { get;set; } = string.Empty; 
     }
 }

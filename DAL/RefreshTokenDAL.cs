@@ -13,10 +13,7 @@ namespace DAL
             _connectionString = connectionString;
         }
 
-        public async Task<(int ResultCode, int NewRefreshTokenID)> AddRefreshTokenAsync(
-            int userID,
-            string tokenHash,
-            DateTime expiresAt)
+        public async Task<(int ResultCode, int NewRefreshTokenID)> AddRefreshTokenAsync(int userID, string tokenHash, DateTime expiresAt)
         {
             using SqlConnection connection = new SqlConnection(_connectionString);
 
@@ -70,9 +67,7 @@ namespace DAL
             return null;
         }
 
-        public async Task<int> RevokeRefreshTokenAsync(
-            int refreshTokenID,
-            string reasonRevoked)
+        public async Task<int> RevokeRefreshTokenAsync( int refreshTokenID, string reasonRevoked)
         {
             using SqlConnection connection = new SqlConnection(_connectionString);
 
@@ -98,10 +93,7 @@ namespace DAL
             return Convert.ToInt32(resultCodeParam.Value);
         }
 
-        public async Task<(int ResultCode, int NewRefreshTokenID)> RotateRefreshTokenAsync(
-            int oldRefreshTokenID,
-            string newTokenHash,
-            DateTime newExpiresAt)
+        public async Task<(int ResultCode, int NewRefreshTokenID)> RotateRefreshTokenAsync( int oldRefreshTokenID, string newTokenHash, DateTime newExpiresAt)
         {
             using SqlConnection connection = new SqlConnection(_connectionString);
 
