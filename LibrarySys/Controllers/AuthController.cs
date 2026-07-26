@@ -4,6 +4,7 @@ using LibrarySys.DTOs.AuthDTOs;
 using LibrarySys.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Models;
 
 namespace LibrarySys.Controllers
@@ -22,9 +23,11 @@ namespace LibrarySys.Controllers
         }
 
         [HttpPost("register")]
+        [EnableRateLimiting("RegisterRateLimit")]
         [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterUserDto registerDto)
@@ -60,8 +63,10 @@ namespace LibrarySys.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("LoginRateLimit")]
         [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginRequestDto loginDto)
@@ -97,8 +102,10 @@ namespace LibrarySys.Controllers
 
 
         [HttpPost("refresh")]
+        [EnableRateLimiting("RefreshRateLimit")]
         [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<AuthResponseDto>> RefreshToken([FromBody] RefreshTokenRequestDto refreshTokenDto)
