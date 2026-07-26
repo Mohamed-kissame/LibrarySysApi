@@ -160,7 +160,7 @@ namespace BLL
             if (!IsValidEmail(email))
                 throw new ArgumentException("Invalid email. Email must be non-empty, valid, and up to 100 characters.");
 
-            if (!IsValidPassword(password)) throw new ArgumentException("Invalid password. Password must be between 8 and 30 characters.");
+            if (!IsValidPassword(password)) throw new ArgumentException("Password must be between 8 and 30 characters.");
 
           
 
