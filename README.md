@@ -1,8 +1,8 @@
 # Library Borrowing RESTful API
 
-A real-world **Library Borrowing RESTful API** built with **ASP.NET Core Web API**, **C#**, **SQL Server**, **ADO.NET**, **Stored Procedures**, **BCrypt password hashing**, and a clean **3-Tier Architecture**.
+A real-world **Library Borrowing RESTful API** built with **ASP.NET Core Web API**, **C#**, **SQL Server**, **ADO.NET**, **Stored Procedures**, **SQL Transactions**, **JWT Authentication**, **Role-Based Authorization**, **Policy-Based Ownership Authorization**, **Refresh Token Rotation**, **Rate Limiting**, **BCrypt password hashing**, **Security Logging**, **Business Auditing**, and a clean **3-Tier Architecture**.
 
-This project manages books, members, borrowing operations, return operations, borrowing history, dashboard statistics, soft delete rules, database-level business transactions, and the first authentication foundation before JWT authorization.
+This project manages books, members, borrowing operations, return operations, borrowing history, dashboard statistics, soft delete rules, database-level business transactions, secure authentication, authorization, refresh-token sessions, brute-force protection, and audit logs for important security and business actions.
 
 ---
 
@@ -21,9 +21,15 @@ The API supports:
 - Preventing invalid borrowing operations
 - Applying business rules through the BLL and SQL Server stored procedures
 - Dashboard-ready statistics endpoints for total books, members, and borrowings
-- Authentication foundation with register and login endpoints
+- Register and login endpoints
 - Secure password hashing using BCrypt
-- Role-ready user accounts for Admin, Librarian, and Member users
+- JWT access token generation and validation
+- Refresh token rotation and logout revocation
+- Role-based authorization for Admin, Librarian, and Member users
+- Policy-based ownership authorization for member-specific data
+- Rate limiting for authentication endpoints
+- Security logging for authentication events
+- Business auditing for important library actions
 
 ---
 
@@ -35,7 +41,9 @@ The API supports:
 - ADO.NET
 - Stored Procedures
 - SQL Transactions
+- JWT Bearer Authentication
 - BCrypt.Net-Next
+- ASP.NET Core Rate Limiting
 - Swagger / OpenAPI
 - DTOs
 - Async / Await
@@ -66,6 +74,9 @@ Responsible for:
 - Response DTOs
 - HTTP status codes
 - Swagger documentation/testing
+- JWT authentication setup
+- Role and policy protection attributes
+- Rate limiting policies on authentication endpoints
 - Mapping internal models to response DTOs
 - Returning safe responses without exposing sensitive fields
 
@@ -78,6 +89,8 @@ Responsible for:
 - ResultCode mapping
 - Exception-based business flow
 - Password hashing and password verification
+- Refresh token generation, hashing, verification, rotation, and revocation
+- Audit log validation before sending records to the DAL
 - Preventing invalid operations before reaching the database
 
 ### DAL Layer
@@ -99,6 +112,8 @@ Responsible for:
 - Stored procedures
 - Transactions
 - Data integrity
+- Refresh token persistence
+- Audit log persistence
 
 ---
 
@@ -153,13 +168,17 @@ The API includes dashboard-ready endpoints for simple statistics:
 - Total members
 - Total borrowings
 
-These endpoints are currently available and will be protected later with JWT roles and policies.
+These endpoints are protected for Admin and Librarian users.
 
-### Authentication Foundation
+---
 
-The project now includes the first authentication layer before JWT implementation.
+## Security Features
 
-Current authentication features:
+### Authentication
+
+The project includes a secure authentication system.
+
+Authentication features:
 
 - Separate `Users` table for login accounts
 - Separation between `Users` and `Members`
@@ -167,7 +186,8 @@ Current authentication features:
 - Login endpoint
 - BCrypt password hashing
 - BCrypt password verification during login
-- Role-ready user system
+- JWT access token generation
+- Refresh token generation
 - Passwords are never stored as plain text
 - Password hashes are never returned in API responses
 
@@ -177,7 +197,143 @@ Supported roles:
 - `Librarian`
 - `Member`
 
-At this stage, JWT token generation is not implemented yet. The current authentication foundation prepares the project for JWT, role-based authorization, and ownership policies.
+### JWT Access Tokens
+
+Access tokens are short-lived JWTs used to access protected endpoints.
+
+JWT tokens include safe claims such as:
+
+- UserID
+- Email
+- Role
+- FullName
+- MemberID when applicable
+
+The API validates:
+
+- Issuer
+- Audience
+- Expiration
+- Signing key
+- Token signature
+
+Sensitive data is never stored inside the JWT payload.
+
+### User Secrets
+
+The JWT signing key is stored using **User Secrets** during development and is not committed to GitHub.
+
+Production environments should use secure secret storage such as:
+
+- Environment variables
+- Azure Key Vault
+- Hosting provider secret manager
+
+### Role-Based Authorization
+
+The API protects endpoints using role-based authorization.
+
+Examples:
+
+- Admin can delete books and members.
+- Admin and Librarian can create/update books and members.
+- Admin and Librarian can manage borrowings.
+- Public users can read book listings and book details.
+
+### Policy-Based Ownership Authorization
+
+The API uses policy-based authorization to protect member-specific data.
+
+Members can only access their own profile and borrowing history, while Admin and Librarian users can access all member-related data.
+
+Protected ownership endpoints include:
+
+- `GET /api/members/{memberID}`
+- `GET /api/borrowings/member/{memberID}`
+
+### Refresh Token System
+
+The API supports secure refresh token rotation.
+
+- Access tokens are short-lived JWTs.
+- Refresh tokens are long-lived random secrets.
+- Refresh tokens are stored in the database as BCrypt hashes.
+- Refresh tokens are rotated after every use.
+- Old refresh tokens are revoked after refresh.
+- Logout revokes the current refresh token.
+
+Refresh tokens use the format:
+
+```text
+RefreshTokenID.Secret
+```
+
+Only the secret part is hashed and stored in SQL Server. The full refresh token is never stored in plain text.
+
+### Rate Limiting
+
+The API uses ASP.NET Core built-in rate limiting to protect public authentication endpoints from brute-force and abuse attempts.
+
+Protected endpoints include:
+
+- `POST /api/auth/login`
+- `POST /api/auth/register`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+
+When too many requests are sent, the API returns:
+
+```http
+429 Too Many Requests
+```
+
+### Logging and Auditing
+
+The API stores important security and business events in the `AuditLogs` table.
+
+Security events include:
+
+- LoginSuccess
+- LoginFailed
+- RefreshSuccess
+- RefreshFailed
+- LogoutSuccess
+- LogoutFailed
+
+Business audit events include:
+
+- CreateBook
+- UpdateBook
+- DeleteBook
+- CreateMember
+- UpdateMember
+- DeleteMember
+- BorrowBook
+- ReturnBook
+
+Each audit record can store:
+
+- UserID
+- EventType
+- Action
+- EntityName
+- EntityID
+- Result
+- Reason
+- IP address
+- User-Agent
+- Request path
+- HTTP method
+- CreatedAt timestamp
+
+Sensitive data is never logged, including:
+
+- Passwords
+- Password hashes
+- Access tokens
+- Full refresh tokens
+- JWT secret keys
+- Connection strings
 
 ---
 
@@ -252,6 +408,50 @@ User account rules:
 - User email must be unique.
 - Passwords are stored only as BCrypt hashes.
 
+### RefreshTokens
+
+```text
+RefreshTokenID
+UserID
+TokenHash
+ExpiresAt
+CreatedAt
+RevokedAt
+ReplacedByRefreshTokenID
+ReasonRevoked
+```
+
+Refresh token rules:
+
+- Refresh token secrets are stored as BCrypt hashes.
+- A revoked refresh token cannot be reused.
+- Expired refresh tokens cannot be used.
+- Each refresh operation revokes the old token and creates a new one.
+
+### AuditLogs
+
+```text
+AuditLogID
+UserID
+EventType
+Action
+EntityName
+EntityID
+Result
+Reason
+IpAddress
+UserAgent
+RequestPath
+HttpMethod
+CreatedAt
+```
+
+Audit log rules:
+
+- Security and business events are recorded.
+- Sensitive data is never logged.
+- Audit logging should not expose passwords, tokens, or secret keys.
+
 ---
 
 ## API Endpoints
@@ -261,7 +461,10 @@ User account rules:
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | `/api/auth/register` | Create a new system user |
-| POST | `/api/auth/login` | Verify email/password and log in the user |
+| POST | `/api/auth/login` | Verify email/password and return access/refresh tokens |
+| POST | `/api/auth/refresh` | Rotate refresh token and return new tokens |
+| POST | `/api/auth/logout` | Revoke refresh token |
+| GET | `/api/auth/me` | Return current authenticated user claims |
 
 ### Books
 
@@ -319,6 +522,24 @@ User account rules:
 {
   "email": "admin@test.com",
   "password": "Admin12345"
+}
+```
+
+Login returns safe user information with an access token and refresh token.
+
+### Refresh Token
+
+```json
+{
+  "refreshToken": "25.longRandomSecret"
+}
+```
+
+### Logout
+
+```json
+{
+  "refreshToken": "25.longRandomSecret"
 }
 ```
 
@@ -391,10 +612,54 @@ Find user by email
 ↓
 Verify entered password using BCrypt.Verify
 ↓
-If valid, return safe user information
+Generate JWT access token
+↓
+Generate refresh token secret
+↓
+Store BCrypt hash of refresh token secret
+↓
+Return access token + refresh token
 ```
 
 The system does not return different messages for invalid email and invalid password. This avoids exposing whether a specific email exists in the system.
+
+### Refresh Flow
+
+```text
+Refresh request
+↓
+Parse RefreshTokenID.Secret
+↓
+Find refresh token row by RefreshTokenID
+↓
+Verify secret using BCrypt.Verify
+↓
+Check token is not expired
+↓
+Check token is not revoked
+↓
+Revoke old refresh token
+↓
+Create new refresh token
+↓
+Generate new access token
+↓
+Return new access token + new refresh token
+```
+
+### Logout Flow
+
+```text
+Logout request
+↓
+Verify refresh token
+↓
+Revoke refresh token
+↓
+Client deletes local tokens
+```
+
+Logout revokes the refresh token. The access token remains stateless and naturally expires based on its lifetime.
 
 ### Password Security
 
@@ -510,13 +775,15 @@ When registering a user, the system checks:
 
 | Status Code | Meaning |
 |---|---|
-| 200 OK | Successful GET, update, return, or login operation |
+| 200 OK | Successful GET, refresh, return, or login operation |
 | 201 Created | Resource created successfully |
-| 204 No Content | Resource deleted successfully |
+| 204 No Content | Resource deleted, updated, or logout completed successfully |
 | 400 Bad Request | Invalid request data or invalid ID |
-| 401 Unauthorized | Invalid login credentials or missing/invalid authentication later |
+| 401 Unauthorized | Missing, expired, or invalid authentication |
+| 403 Forbidden | Authenticated user does not have permission |
 | 404 Not Found | Resource does not exist |
 | 409 Conflict | Business rule conflict |
+| 429 Too Many Requests | Rate limit exceeded |
 | 500 Internal Server Error | Unexpected server error |
 
 ---
@@ -528,6 +795,7 @@ The most important operations in this project are protected using SQL transactio
 ```text
 Borrow Book
 Return Book
+Refresh Token Rotation
 ```
 
 This prevents inconsistent data.
@@ -544,7 +812,7 @@ If one step fails, the whole operation is rolled back.
 
 ## Stored Procedures
 
-The project uses stored procedures for all database operations.
+The project uses stored procedures for database operations.
 
 ### Books Procedures
 
@@ -593,6 +861,21 @@ sp_Users_GetByEmail
 sp_Users_EmailExists
 ```
 
+### Refresh Token Procedures
+
+```text
+sp_RefreshTokens_Add
+sp_RefreshTokens_GetByID
+sp_RefreshTokens_Revoke
+sp_RefreshTokens_Rotate
+```
+
+### Audit Log Procedures
+
+```text
+sp_AuditLogs_Add
+```
+
 ---
 
 ## ResultCode Handling
@@ -622,6 +905,18 @@ Example for user registration:
 -4  = Admin/Librarian cannot have MemberID
 -5  = Member not found or inactive
 -6  = Member already has a user account
+```
+
+Example for refresh token rotation:
+
+```text
+ 1  = Success
+-1  = Old token not found
+-2  = Old token already revoked
+-3  = Old token expired
+-4  = User not found or inactive
+-5  = Invalid input
+-99 = Unexpected SQL error
 ```
 
 The BLL maps these result codes to exceptions, and the API controller maps those exceptions to proper HTTP responses.
@@ -657,6 +952,14 @@ Register member without MemberID
 Register admin/librarian with MemberID
 Login with correct password
 Login with wrong password
+JWT authorization in Swagger
+Role-based authorization
+Policy-based ownership access
+Refresh token rotation
+Old refresh token reuse blocked
+Logout refresh token revocation
+Rate limiting returns 429 Too Many Requests
+Login and business actions stored in AuditLogs
 ```
 
 ---
@@ -679,25 +982,32 @@ LibrarySysApi
 │   │   ├── BorrowingDTOs
 │   │   └── MemberDTOs
 │   │
+│   ├── Authorization
+│   ├── Services
 │   ├── Program.cs
 │   └── appsettings.json
 │
 ├── BLL
 │   ├── AuthService.cs
+│   ├── AuditLogService.cs
 │   ├── BookService.cs
 │   ├── BorrowingService.cs
 │   └── MemberService.cs
 │
 ├── DAL
+│   ├── AuditLogDAL.cs
 │   ├── BookDAL.cs
 │   ├── BorrowingDAL.cs
 │   ├── MemberDAL.cs
+│   ├── RefreshTokenDAL.cs
 │   └── UserDAL.cs
 │
 └── Models
+    ├── AuditLog.cs
     ├── Book.cs
     ├── Borrowing.cs
     ├── Member.cs
+    ├── RefreshToken.cs
     └── User.cs
 ```
 
@@ -717,9 +1027,9 @@ Open the `.sln` file in Visual Studio.
 
 ### 3. Configure the connection string
 
-Use **User Secrets** for the real SQL Server connection string.
+Use **User Secrets** or another secure secret storage mechanism for the real SQL Server connection string.
 
-Example:
+Example for development:
 
 ```json
 {
@@ -729,9 +1039,31 @@ Example:
 }
 ```
 
-Do not commit real database passwords to GitHub.
+Do not commit real database passwords or JWT keys to GitHub.
 
-### 4. Create the database
+### 4. Configure JWT settings
+
+Store the JWT key securely using User Secrets during development.
+
+Example:
+
+```bash
+dotnet user-secrets set "JwtSettings:Key" "YOUR_LONG_SECURE_SECRET_KEY"
+```
+
+The non-secret JWT settings can stay in `appsettings.json`:
+
+```json
+{
+  "JwtSettings": {
+    "Issuer": "LibrarySysApi",
+    "Audience": "LibrarySysClient",
+    "ExpirationMinutes": 60
+  }
+}
+```
+
+### 5. Create the database
 
 Run the SQL scripts for:
 
@@ -742,7 +1074,7 @@ Stored procedures
 Test data
 ```
 
-### 5. Run the API
+### 6. Run the API
 
 Start the Web API project and open Swagger.
 
@@ -767,8 +1099,15 @@ This project helped me practice:
 - Controller → BLL → DAL → SQL Server flow
 - Authentication foundation design
 - Secure password hashing with BCrypt
-- Login verification without exposing password details
-- Preparing an API for JWT authentication and role-based authorization
+- JWT authentication and validation
+- Swagger JWT authorization testing
+- Role-based authorization
+- Policy-based ownership authorization
+- Refresh token rotation and logout revocation
+- Rate limiting against brute-force abuse
+- Security logging
+- Business auditing
+- Avoiding sensitive data leaks in logs
 
 ---
 
@@ -777,26 +1116,27 @@ This project helped me practice:
 Possible future improvements:
 
 ```text
-JWT Authentication
-Role-based Authorization
-Ownership Policies
-Refresh Tokens
 Pagination
-Search and Filtering
-Logging
-Global Exception Middleware
-Unit Testing
-Late Return Fines
-Email Notifications
-Admin Dashboard
-Frontend Client
+Search and filtering
+Global exception middleware
+Unit testing
+Integration testing
+Serilog or structured logging provider
+Audit log search/filter endpoints
+Security alerts and monitoring
+Late return fines
+Email notifications
+Admin dashboard
+Frontend client
+HttpOnly cookie-based refresh token storage
+Production deployment hardening
 ```
 
 ---
 
 ## Project Status
 
-Core backend logic completed.
+Core backend logic and security foundation completed.
 
 The project currently includes:
 
@@ -809,19 +1149,24 @@ Borrowing history
 Dashboard statistics
 Soft delete protection
 Transaction-based business operations
-Authentication foundation
-BCrypt password hashing
-Register and login endpoints
+Authentication with BCrypt password hashing
+JWT access tokens
+Role-based authorization
+Policy-based ownership authorization
+Refresh token rotation
+Logout revocation
+Rate limiting for auth endpoints
+Security logging
+Business auditing
 ```
 
 Next step:
 
 ```text
-JWT token generation
-JWT authentication middleware
-Swagger JWT authorization testing
-Role-based endpoint protection
-Ownership policies for member-specific data
+Monitoring and alerting
+Global exception middleware
+Pagination and search
+Frontend integration
 ```
 
 ---
