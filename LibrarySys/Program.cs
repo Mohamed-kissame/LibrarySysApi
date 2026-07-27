@@ -32,10 +32,12 @@ builder.Services.AddScoped<MemberService>();
 builder.Services.AddScoped<BorrowingDAL>(_ => new BorrowingDAL(connectionString));
 builder.Services.AddScoped<BorrowingService>();
 
-
 builder.Services.AddScoped<UserDAL>(_ => new UserDAL(connectionString));
 builder.Services.AddScoped<RefreshTokenDAL>(_ => new RefreshTokenDAL(connectionString));
 builder.Services.AddScoped<AuthService>();
+
+builder.Services.AddScoped<AuditLogDAL>(_ => new AuditLogDAL(connectionString));
+builder.Services.AddScoped<AuditLogService>();
 
 builder.Services.AddScoped<JwtTokenService>();
 

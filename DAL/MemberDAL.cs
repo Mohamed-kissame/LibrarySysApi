@@ -14,6 +14,7 @@ namespace DAL
 
         private readonly string _connectionString;
 
+
         public MemberDAL(string connectionstring)
         {
             _connectionString = connectionstring;

@@ -296,7 +296,7 @@ namespace BLL
             };
         }
 
-        public async Task RevokeRefreshTokenAsync(string refreshToken)
+        public async Task<int> RevokeRefreshTokenAsync(string refreshToken)
         {
             var parsedToken = ParseRefreshToken(refreshToken);
 
@@ -331,7 +331,7 @@ namespace BLL
             switch (resultCode)
             {
                 case 1:
-                    return;
+                    return storedRefreshToken.UserID;
 
                 case -1:
                     throw new UnauthorizedAccessException("Invalid refresh token.");
