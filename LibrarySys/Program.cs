@@ -89,7 +89,13 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-string jwtKey = builder.Configuration["JwtSettings:Key"] ?? throw new InvalidOperationException("JWT key is missing.");
+string jwtKey = builder.Configuration["JwtSettings:Key"]
+    ?? throw new InvalidOperationException("JWT key is missing.");
+
+if (jwtKey.Length < 32)
+{
+    throw new InvalidOperationException("JWT key must be at least 32 characters long.");
+}
 
 builder.Services.AddAuthentication(options =>
 {
